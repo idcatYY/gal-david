@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Chat</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        
+        #chat {
+            width: 400px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        #messages {
+            border-bottom: 1px solid #ccc;
+            padding: 10px;
+            height: 300px;
+            overflow-y: auto;
+        }
+
+        #messageForm {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid #ccc;
+        }
+
+        #messageInput {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-right: 8px;
+        }
+
+        #messageInput:focus {
+            outline: none;
+            border-color: dodgerblue;
+        }
+
+        #sendButton {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            background-color: dodgerblue;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #sendButton:hover {
+            background-color: #007acc;
+        }
+    </style>
+</head>
+<body>
+    <div id="chat">
+        <div id="messages"></div>
+        <form id="messageForm">
+            <input type="text" id="nameInput" placeholder="Enter your name" required>
+            <input type="text" id="messageInput" placeholder="Enter your message" required>
+            <button type="submit" id="sendButton">Send</button>
+        </form>
+    </div>
+
+    <script>
+        const socket = new WebSocket('ws://localhost:8080');
+        let userName = localStorage.getItem('userName');
+
+        if (!userName) {
+            promptForName();
+        }
+
+        socket.onopen = function(event) {
+            console.log('WebSocket is open');
+        };
+
+        socket.onmessage = function(event) {
+            const message = event.data;
+            const messages = document.getElementById('messages');
+            messages.innerHTML += '<p>' + message + '</p>';
+            messages.scrollTop = messages.scrollHeight;
+        };
+
+        document.getElementById('messageForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value;
+            if (message.trim() !== '') {
+                socket.send(userName + ': ' + message);
+                messageInput.value = '';
+            }
+        });
+
+        function promptForName() {
+            userName = prompt("Please enter your name:");
+            if (!userName || userName.trim() === '') {
+                promptForName();
+            } else {
+                localStorage.setItem('userName', userName);
+            }
+        }
+    </script>
+</body>
+</html>
